@@ -1,0 +1,141 @@
+import streamlit as st
+
+# --- KONFIGURASI HALAMAN ---
+st.set_page_config(
+    page_title="Magic Prompt Generator (FLUX.2 Edition)",
+    page_icon="📸",
+    layout="centered"
+)
+
+# --- CSS CUSTOM BIAR TAMPILAN KEREN ---
+st.markdown("""
+    <style>
+    .stButton>button {
+        width: 100%;
+        background-color: #FF4B4B;
+        color: white;
+        font-weight: bold;
+        padding: 10px;
+    }
+    .result-box {
+        background-color: #f0f2f6;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 5px solid #FF4B4B;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- FITUR PASSWORD (GATEKEEPER) ---
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == "RAHASIA2025": # GANTI PASSWORD DISINI
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.text_input(
+            "Masukkan Kode Akses Rahasia:", type="password", on_change=password_entered, key="password"
+        )
+        st.error("🔒 Aplikasi ini terkunci. Silakan beli E-Book Panduan untuk dapat kodenya.")
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password incorrect, show input + error.
+        st.text_input(
+            "Masukkan Kode Akses Rahasia:", type="password", on_change=password_entered, key="password"
+        )
+        st.error("❌ Kode Salah! Coba cek lagi di E-Book halaman terakhir.")
+        return False
+    else:
+        # Password correct.
+        return True
+
+if check_password():
+    # --- JUDUL APLIKASI ---
+    st.title("📸 FLUX.2 Hyper-Realism Generator")
+    st.markdown("Buat prompt fotografi kelas dunia dalam 5 detik. **Khusus untuk FLUX.2 & Phase One IQ4 Style.**")
+    st.divider()
+
+    # --- INPUT USER ---
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        genre = st.selectbox("1. Pilih Genre Foto:", 
+                             ["Arsitektur (Gedung/Alam)", 
+                              "Potret Manusia (Close Up)", 
+                              "Makanan (Food Photography)",
+                              "Otomotif (Mobil/Motor)",
+                              "Interior Design"])
+    
+    with col2:
+        cuaca = st.selectbox("2. Waktu & Mood:", 
+                             ["Golden Hour (Pagi/Sore Hangat)", 
+                              "Mendung Syahdu (Soft Lighting)", 
+                              "Siang Terik (Hard Shadows)", 
+                              "Malam Dramatis (Cinematic)",
+                              "Hujan/Basah (Reflective)"])
+
+    objek = st.text_input("3. Deskripsikan Objek Utama (Bahasa Inggris lebih baik):", 
+                          placeholder="Contoh: A traditional wooden Joglo house in the middle of rice field")
+
+    # --- LOGIKA "BUMBU RAHASIA" ---
+    if genre == "Arsitektur (Gedung/Alam)":
+        lensa = "16mm wide-angle"
+        aperture = "f/11 (Deep Focus)"
+        film_stock = "Kodak Portra 400"
+        tekstur = "weathered textures, mossy stone details, natural imperfections, raw materials"
+    
+    elif genre == "Potret Manusia (Close Up)":
+        lensa = "85mm portrait"
+        aperture = "f/1.8 (Bokeh Background)"
+        film_stock = "Kodak Portra 400"
+        tekstur = "extremely detailed skin pores, vellus hair, sweat drops, authentic skin texture, sharp eyes"
+    
+    elif genre == "Makanan (Food Photography)":
+        lensa = "100mm macro"
+        aperture = "f/2.8"
+        film_stock = "Fujifilm Velvia"
+        tekstur = "glistening oil, steam rising, delicious texture, food styling details"
+
+    elif genre == "Otomotif (Mobil/Motor)":
+        lensa = "50mm prime"
+        aperture = "f/8"
+        film_stock = "Cinematic Color Grading"
+        tekstur = "metallic paint reflection, wet road texture, dirt splashes, tire rubber details"
+
+    else: # Interior
+        lensa = "24mm tilt-shift"
+        aperture = "f/11"
+        film_stock = "Natural Indoor Lighting"
+        tekstur = "fabric texture, wood grain, marble reflection, dust particles in light"
+
+    # --- RAKIT MASTER PROMPT ---
+    master_prompt = f"A super hyper-realistic {genre} photography of {objek}. {cuaca} atmosphere. Featuring {tekstur}. Shot on Phase One XF IQ4, {lensa} lens, {aperture}, global illumination, photorealistic, {film_stock}, 8k, incredibly detailed, raw photo, slight film grain, high texture fidelity."
+    
+    negative_prompt = "3d render, cgi, painting, drawing, cartoon, anime, illustration, low quality, blurred, watermark, text, signature, oversaturated, distorted structure, plastic texture, smooth skin, bad anatomy, ugly, deformed."
+
+    # --- TOMBOL EKSEKUSI ---
+    st.write("")
+    if st.button("✨ GENERATE MANTRA AJAIB ✨"):
+        if objek:
+            st.success("✅ Prompt Berhasil Dibuat! Silakan Copy:")
+            
+            st.markdown('<div class="result-box">', unsafe_allow_html=True)
+            st.code(master_prompt, language="text")
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            with st.expander("Lihat Negative Prompt (Wajib Dipakai)"):
+                st.code(negative_prompt, language="text")
+            
+            st.info("💡 **Tips:** Copy prompt ini ke **Tensor.art** atau **SeaArt** pakai model **FLUX.2**.")
+        else:
+            st.warning("⚠️ Eits, isi dulu deskripsi objeknya bro!")
+
+    st.divider()
+    st.caption("© 2025 Flux Master Generator - Private Tools")
